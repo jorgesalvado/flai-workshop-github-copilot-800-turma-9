@@ -16,14 +16,37 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from octofit_tracker.views import (
-    api_root,
     UserViewSet,
     TeamViewSet,
     ActivityViewSet,
     LeaderboardViewSet,
     WorkoutViewSet
 )
+import os
+
+
+@api_view(['GET'])
+def api_root(request):
+    """API root endpoint showing available endpoints with Codespace URL support"""
+    codespace_name = os.getenv('CODESPACE_NAME')
+    
+    if codespace_name:
+        base_url = f'https://{codespace_name}-8000.app.github.dev'
+    else:
+        # Use request to build the URL for localhost
+        base_url = request.build_absolute_uri('/').rstrip('/')
+    
+    return Response({
+        'users': f'{base_url}/api/users/',
+        'teams': f'{base_url}/api/teams/',
+        'activities': f'{base_url}/api/activities/',
+        'leaderboard': f'{base_url}/api/leaderboard/',
+        'workouts': f'{base_url}/api/workouts/',
+    })
+
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
